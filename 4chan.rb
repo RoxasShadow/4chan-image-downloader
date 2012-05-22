@@ -12,19 +12,19 @@ abort 'There are only 16 pages (0-15).' if page.to_i > 15
 abort "/#{board}/ does not exist in 4chan." unless boards.include? board
 
 dir = "#{board}_#{Time.now.getutc.to_s.gsub(/\s+/, '')}"
-Dir::mkdir(dir)
+Dir::mkdir(dir) unless File.directory? dir
 
-Nokogiri::HTML(open("http://boards.4chan.org/#{board}/#{page}")).xpath('//a[@class = "replylink"]/@href').each { |url|
-	print "Downloading from /#{board}/#{url}..."
-	
-	i = 0
-	Nokogiri::HTML(open("http://boards.4chan.org/#{board}/#{url}")).xpath('//a[@class = "fileThumb"]/@href').each { |p|
-		open("#{dir}/#{File.basename(p)}", ?w) do |file|
-			i += 1
-			file << open("http:#{p}").read
-		end
-	}
-	puts " Downloaded #{i} images from /#{board}/#{url}"
-}
+Nokogiri::HTML(open("http://boards.4chan.org/#{board}/#{page}")).xpath('//a[@class = "replylink"]/@href').map { |url|
+   Thread.new do
+      Nokogiri::HTML(open("http://boards.4chan.org/#{board}/#{url}")).xpath('//a[@class = "fileThumb"]/@href').each { |p|
+         filename = File.basename(p)
+         puts '#> ' + filename
+		   open("#{dir}/#{filename}", ?w) do |file|
+			   file << open("http:#{p}").read
+		   end
+	   }
+   end
+}.each(&:join)
 
-abort "Done. You can find your images in #{dir} :3"
+puts "Downloaded #{Dir.entries(dir).size} files."
+puts "You can find your images in #{dir} :3"
