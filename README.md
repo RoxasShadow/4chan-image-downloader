@@ -1,3 +1,5 @@
+## That's useless! Use [Dumper](https://github.com/RoxasShadow/Dumper) instead!
+
 A 4chan image downloader.
 Pay attention: Your storage disk will be filled up very quickly.
 
